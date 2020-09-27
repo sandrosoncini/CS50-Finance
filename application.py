@@ -1,6 +1,7 @@
 import os
 
-import logging
+import sys
+from datetime import datetime
 from cs50 import SQL
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
@@ -8,7 +9,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required, lookup, usd, can_afford
 
 # Configure application
 app = Flask(__name__)
@@ -54,15 +55,26 @@ def buy():
     """Buy shares of stock"""
     
     if request.method == "POST":
-        symbol = request.form.get("symbol")
-        share = lookup(request.form.get("share"))
-        ss
-        if  share <= 0:
+        symbol = lookup(request.form.get("symbol"))
+        shares = int(request.form.get("shares"))
+        user = session["user_id"]
+        date = datetime.now()
+        
+        if  shares <= 0:
             return apology("Share quantity must be greater than 0", 403)
         elif symbol == None:
             return apology("Symbol does not exist", 403)
-
-    return render_template("buy.html")
+        elif can_afford(symbol["price"], shares, user) < 0:
+            return apology("you can not afford", 403)
+            
+        
+        db.execute("INSERT INTO shares (user_id, shares, symbol,name, price,created_at ) VALUES (:user_id, :shares, :symbol, :name, :price, :created_at)", 
+                        user_id = user, shares = shares,symbol= symbol["symbol"], name= symbol["name"], price=symbol["price"], created_at = date)  
+        
+        
+        return redirect("/")
+    else:
+        return render_template("buy.html")
 
 
 @app.route("/history")

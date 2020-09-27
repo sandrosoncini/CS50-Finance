@@ -4,7 +4,10 @@ import urllib.parse
 
 from flask import redirect, render_template, request, session
 from functools import wraps
+from cs50 import SQL
+import sys
 
+db = SQL("sqlite:///finance.db")
 
 def apology(message, code=400):
     """Render message as an apology to user."""
@@ -61,3 +64,13 @@ def lookup(symbol):
 def usd(value):
     """Format value as USD."""
     return f"${value:,.2f}"
+
+def can_afford(price, qty,id):
+    total_shares = price * qty
+    row = db.execute("SELECT * FROM users WHERE id = :id",
+                          id= id)
+    total = row[0]['cash'] - total_shares
+    
+    return total
+    
+        
