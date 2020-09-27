@@ -1,5 +1,6 @@
 import os
 
+import logging
 from cs50 import SQL
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
@@ -118,8 +119,32 @@ def quote():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    password_confirmation = request.form.get("confirm_password")
+    cash = request.form.get("cash")
     
-    return render_template("register.html")
+    if request.method == "POST":
+        
+        if not username:
+            return apology("must provide username", 403)
+            
+        elif not password:
+            return apology("must provide password", 403)
+        
+        elif password != password_confirmation:
+            return apology("password and confirm password must be the same", 403)
+        else:
+            rows = db.execute("SELECT * FROM users")
+           
+            for row in rows:
+                if row["username"].lower() == username.lower():
+                    return apology("username alredy exist", 403)
+
+            db.execute("INSERT INTO users (username, hash, cash) VALUES (:username, :password, :cash)", username = username, password=generate_password_hash(password), cash=cash)
+            return redirect ("/")
+    else:        
+        return render_template("register.html")
 
 
 @app.route("/sell", methods=["GET", "POST"])
