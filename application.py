@@ -56,7 +56,7 @@ def buy():
     if request.method == "POST":
         symbol = request.form.get("symbol")
         share = lookup(request.form.get("share"))
-        
+        ss
         if  share <= 0:
             return apology("Share quantity must be greater than 0", 403)
         elif symbol == None:
