@@ -52,7 +52,17 @@ def index():
 @login_required
 def buy():
     """Buy shares of stock"""
-    return apology("TODO")
+    
+    if request.method == "POST":
+        symbol = request.form.get("symbol")
+        share = lookup(request.form.get("share"))
+        
+        if  share <= 0:
+            return apology("Share quantity must be greater than 0", 403)
+        elif symbol == None:
+            return apology("Symbol does not exist", 403)
+
+    return render_template("buy.html")
 
 
 @app.route("/history")
@@ -113,14 +123,15 @@ def logout():
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
 def quote():
-    
+
     if request.method == "POST":
+        symbol = request.form.get("symbol")
         quoted = lookup(request.form.get("symbol"))
-        if quoted == None:
+        if quoted == None or symbol == '':
             return apology("Symbol does not exit", 403)
 
         return render_template("quoted.html", name=quoted["name"], price=quoted["price"], symbol=quoted["symbol"])
-    else:    
+    else:
         return render_template("quote.html")
 
 
@@ -130,27 +141,27 @@ def register():
     password = request.form.get("password")
     password_confirmation = request.form.get("confirm_password")
     cash = request.form.get("cash")
-    
+
     if request.method == "POST":
-        
+
         if not username:
             return apology("must provide username", 403)
-            
+
         elif not password:
             return apology("must provide password", 403)
-        
+
         elif password != password_confirmation:
             return apology("password and confirm password must be the same", 403)
         else:
             rows = db.execute("SELECT * FROM users")
-           
+
             for row in rows:
                 if row["username"].lower() == username.lower():
                     return apology("username alredy exist", 403)
 
             db.execute("INSERT INTO users (username, hash, cash) VALUES (:username, :password, :cash)", username = username, password=generate_password_hash(password), cash=cash)
             return redirect ("/")
-    else:        
+    else:
         return render_template("register.html")
 
 
