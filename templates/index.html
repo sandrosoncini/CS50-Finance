@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+  <table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">Symbol</th>
+      <th scope="col">Name</th>
+      <th scope="col">Shares</th>
+      <th scope="col">Price</th>
+      <th scope="col">TOTAL</th>
+    </tr>
+  </thead>
+  <tbody>
+      {% for shares in own %}
+    <tr>
+      <td>{{shares["symbol"]}} </td>
+      <td>{{shares["name"]}}</td>
+      <td> {{shares["shares"]}}</td>
+      <td>{{shares["price"]}}</td>
+      <td>{{shares["total_price"]}} </td>
+    </tr>
+     {% endfor %}
+    <tr>
+      <td scope="row">CASH</td>
+      <td></td>
+       <td colspan="2"></td>
+      <td>{{cash}}</td>
+    </tr>
+    <tr>
+      <td scope="row"></td>
+       <td colspan="3"></td>
+      <th>{{total}}</th>
+    </tr>
+  </tbody>
+</table>
+{% endblock %}

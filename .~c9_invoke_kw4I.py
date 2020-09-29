@@ -48,12 +48,9 @@ def index():
     """Show portfolio of stocks"""
     
     
-    shares = db.execute("SELECT symbol, name, shares FROM shares WHERE user_id = :user_id", user_id= session["user_id"])
-    cash = db.execute ("SELECT cash FROM users WHERE id=:id", id=session["user_id"])
-    total = 0
+    shares = db.execute("SELECT * FROM shares WHERE user_id = :user_id", user_id= session["user_id"])
+    
     own = [] 
-    
-    
     for share in shares:
         symbol = lookup(share["symbol"])
         own.append({
@@ -64,9 +61,11 @@ def index():
             "total_price": usd(share["shares"] * symbol["price"])
             })
           
-        total += share["shares"] * symbol["price"]
+          
         
-    return render_template("index.html", own = own, cash=usd(cash[0]["cash"]) , total=usd(total + cash[0]["cash"]))
+    return render_template("index.html", own = own)
+    
+    # return apology("TODO")
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
@@ -200,7 +199,6 @@ def register():
             db.execute("INSERT INTO users (username, hash, cash) VALUES (:username, :password, :cash)", username = username, password=generate_password_hash(password), cash=cash)
             return redirect ("/")
     else:
-        
         return render_template("register.html")
 
 
@@ -208,7 +206,7 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return render_template("sell.html")
+    return apology("TODO")
 
 
 def errorhandler(e):
