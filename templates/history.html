@@ -15,13 +15,12 @@
     </tr>
   </thead>
   <tbody>
-      {% for shares in own %}
+      {% for t in transacted %}
     <tr>
-      <td>{{shares["symbol"]}} </td>
-      <td>{{shares["name"]}}</td>
-      <td> {{shares["shares"]}}</td>
-      <td>{{shares["price"]}}</td>
-      <td>{{shares["total_price"]}} </td>
+      <td>{{t["symbol"]}} </td>
+      <td> {{t["shares"]}}</td>
+      <td>{{t["price"]}}</td>
+      <td>{{t["create_at"]}} </td>
     </tr>
      {% endfor %}
   </tbody>

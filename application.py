@@ -108,7 +108,22 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return render_template("history.html")
+    
+    transactions = db.execute("SELECT * FROM transactions WHERE user_id = :user_id", user_id= session["user_id"])
+    
+    transacted = [] 
+    for t in transactions:
+        transacted.append({
+            "symbol": t["symbol"],
+            "shares": t["shares"],
+            "price": usd(t["price"]),
+            "create_at": t["create_at"]
+            })
+          
+        
+    
+    
+    return render_template("history.html", transacted= transacted)
 
 
 @app.route("/login", methods=["GET", "POST"])
