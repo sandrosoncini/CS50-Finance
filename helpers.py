@@ -66,14 +66,21 @@ def usd(value):
     return f"${value:,.2f}"
 
 def can_afford(price, qty,id):
-    total_shares = price * qty
     row = db.execute("SELECT * FROM users WHERE id = :id", id= id)
-    total = row[0]['cash'] - total_shares
     
-    return total
+    if qty >= 0:
+        total_shares = price * qty
+        total = row[0]['cash'] - total_shares
+        return total
+    else:  
+        total_shares = -1 * (price *  qty)
+        total = row[0]['cash'] + total_shares
+        return total
     
 def check_own_shares(user_id, symbol):
     row = db.execute("SELECT * FROM shares WHERE user_id= :user_id AND symbol=:symbol " , user_id= user_id, symbol=symbol)
-    print(row)
-    if (len(row) > 0 ):
-        return True
+    if  row[0]['shares'] > 0:
+        return  row[0]["shares"]   
+    else:
+        return False
+        

@@ -78,25 +78,26 @@ def buy():
         shares = int(request.form.get("shares"))
         user = session["user_id"]
         date = datetime.now()
-        cash = can_afford(symbol["price"], shares, user) 
-        
+        cash = can_afford(symbol["price"], shares, user)
+        own_shares = int(check_own_shares(user, symbol["symbol"]))
+       
         
         if  shares <= 0:
             return apology("Share quantity must be greater than 0", 403)
         elif symbol == None:
             return apology("Symbol does not exist", 403)
-        elif cash < 0:
+        elif cash - (symbol["price"] * shares) < 0:
             return apology("you can not afford", 403)
-          
-          
             
-        if check_own_shares(user, symbol["symbol"]):
-            db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares, user_id=user, symbol=symbol["symbol"])
+        if own_shares > 0:
+            
+            db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares + own_shares, user_id=user, symbol=symbol["symbol"])
+            db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price)",user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"]) 
         else:
             db.execute("INSERT INTO shares (user_id, shares, symbol,name, price,created_at ) VALUES (:user_id, :shares, :symbol, :name, :price, :created_at)", 
                         user_id = user, shares = shares,symbol= symbol["symbol"], name= symbol["name"], price=symbol["price"], created_at = date)  
-        
-        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash, id=user)
+            db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price)",user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"]) 
+        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash - (symbol["price"] * shares), id=user)
         
         return redirect("/")
     else:
@@ -107,7 +108,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    return apology("TODO")
+    return render_template("history.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -208,7 +209,37 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    return render_template("sell.html")
+    
+    
+    if request.method == "POST":
+        symbol = lookup(request.form.get("symbol"))
+        shares =  -1 * int(request.form.get("shares"))
+        user = session["user_id"]
+        cash = can_afford(symbol["price"], shares, user) 
+        rows = db.execute("SELECT shares FROM shares WHERE user_id=:user_id AND symbol=:symbol", user_id= user, symbol=symbol["symbol"])
+        
+        # if  rows = 0:
+        #     return apology("Share quantity must be greater than 0", 403)
+        # elif symbol == None:
+        #     return apology("Symbol does not exist", 403)
+        # elif cash < 0:
+        #     return apology("you can not afford", 403)
+          
+          
+            
+        # if check_own_shares(user, symbol["symbol"]):
+        #     db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares, user_id=user, symbol=symbol["symbol"])
+        # else:
+        db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price )", 
+                        user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"])  
+       
+        db.execute("UPDATE shares SET shares=:shares Where user_id=:user_id", shares=(rows[0]['shares'] + shares), user_id=user)
+        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash, id=user)
+        
+        return redirect("/")
+    else:
+        return render_template("sell.html")
+    
 
 
 def errorhandler(e):
