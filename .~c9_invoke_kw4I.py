@@ -48,12 +48,9 @@ def index():
     """Show portfolio of stocks"""
     
     
-    shares = db.execute("SELECT symbol, name, shares FROM shares WHERE user_id = :user_id", user_id= session["user_id"])
-    cash = db.execute ("SELECT cash FROM users WHERE id=:id", id=session["user_id"])
-    total = 0
+    shares = db.execute("SELECT * FROM shares WHERE user_id = :user_id", user_id= session["user_id"])
+    
     own = [] 
-    
-    
     for share in shares:
         symbol = lookup(share["symbol"])
         own.append({
@@ -64,9 +61,11 @@ def index():
             "total_price": usd(share["shares"] * symbol["price"])
             })
           
-        total += share["shares"] * symbol["price"]
+          
         
-    return render_template("index.html", own = own, cash=usd(cash[0]["cash"]) , total=usd(total + cash[0]["cash"]))
+    return render_template("index.html", own = own)
+    
+    # return apology("TODO")
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
@@ -78,26 +77,25 @@ def buy():
         shares = int(request.form.get("shares"))
         user = session["user_id"]
         date = datetime.now()
-        cash = can_afford(symbol["price"], shares, user)
-        own_shares = int(check_own_shares(user, symbol["symbol"]))
-       
+        cash = can_afford(symbol["price"], shares, user) 
+        
         
         if  shares <= 0:
             return apology("Share quantity must be greater than 0", 403)
         elif symbol == None:
             return apology("Symbol does not exist", 403)
-        elif cash - (symbol["price"] * shares) < 0:
+        elif cash < 0:
             return apology("you can not afford", 403)
+          
+          
             
-        if own_shares > 0:
-            
-            db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares + own_shares, user_id=user, symbol=symbol["symbol"])
-            db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price)",user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"]) 
+        if check_own_shares(user, symbol["symbol"]):
+            db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares, user_id=user, symbol=symbol["symbol"])
         else:
             db.execute("INSERT INTO shares (user_id, shares, symbol,name, price,created_at ) VALUES (:user_id, :shares, :symbol, :name, :price, :created_at)", 
                         user_id = user, shares = shares,symbol= symbol["symbol"], name= symbol["name"], price=symbol["price"], created_at = date)  
-            db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price)",user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"]) 
-        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash - (symbol["price"] * shares), id=user)
+        
+        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash, id=user)
         
         return redirect("/")
     else:
@@ -108,22 +106,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions"""
-    
-    transactions = db.execute("SELECT * FROM transactions WHERE user_id = :user_id", user_id= session["user_id"])
-    
-    transacted = [] 
-    for t in transactions:
-        transacted.append({
-            "symbol": t["symbol"],
-            "shares": t["shares"],
-            "price": usd(t["price"]),
-            "create_at": t["create_at"]
-            })
-          
-        
-    
-    
-    return render_template("history.html", transacted= transacted)
+    return apology("TODO")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -216,7 +199,6 @@ def register():
             db.execute("INSERT INTO users (username, hash, cash) VALUES (:username, :password, :cash)", username = username, password=generate_password_hash(password), cash=cash)
             return redirect ("/")
     else:
-        
         return render_template("register.html")
 
 
@@ -224,37 +206,7 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    
-    
-    if request.method == "POST":
-        symbol = lookup(request.form.get("symbol"))
-        shares =  -1 * int(request.form.get("shares"))
-        user = session["user_id"]
-        cash = can_afford(symbol["price"], shares, user) 
-        rows = db.execute("SELECT shares FROM shares WHERE user_id=:user_id AND symbol=:symbol", user_id= user, symbol=symbol["symbol"])
-        
-        # if  rows = 0:
-        #     return apology("Share quantity must be greater than 0", 403)
-        # elif symbol == None:
-        #     return apology("Symbol does not exist", 403)
-        # elif cash < 0:
-        #     return apology("you can not afford", 403)
-          
-          
-            
-        # if check_own_shares(user, symbol["symbol"]):
-        #     db.execute("UPDATE shares SET shares=:shares WHERE user_id=:user_id AND symbol=:symbol", shares=shares, user_id=user, symbol=symbol["symbol"])
-        # else:
-        db.execute("INSERT INTO transactions (user_id, shares, symbol, price ) VALUES (:user_id, :shares, :symbol, :price )", 
-                        user_id = user, shares = shares,symbol= symbol["symbol"], price=symbol["price"])  
-       
-        db.execute("UPDATE shares SET shares=:shares Where user_id=:user_id", shares=(rows[0]['shares'] + shares), user_id=user)
-        db.execute("UPDATE users SET cash=:cash Where id=:id", cash=cash, id=user)
-        
-        return redirect("/")
-    else:
-        return render_template("sell.html")
-    
+    return apology("TODO")
 
 
 def errorhandler(e):
