@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Edit
+{% endblock %}
+
+{% block main %}
+    <form action="/edit" method="post">
+ 
+        <div class="form-group">
+            <input class="form-control" name="password" placeholder="Password" type="password">
+        </div>
+         <div class="form-group">
+            <input class="form-control" name="new_password" placeholder="New Password" type="password">
+        </div>
+        <div class="form-group">
+            <input class="form-control" name="new_password_confirmation" placeholder="New Password Confirmation" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Edit</button>
+    </form>
+{% endblock %}
